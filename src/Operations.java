@@ -1,162 +1,218 @@
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
 public class Operations {
-    public static String evenOddNumber(int number){
-        String type = "";
-        if((number % 2) != 0){
-            type = "не";
+    // Create an array with even numbers
+    static int[] evenArray(){
+        int[] retArray = new int[10];
+        for (int i = 1; i <= retArray.length; i++) {
+            retArray[i - 1] = i * 2;
         }
-        return "Число " + number + " - " + type + " четное.";
+        return retArray;
     }
-    public static String tenComparer(float firstNumber, float secondNumber){
-        float tmp;
-        if((firstNumber - 10) > (secondNumber - 10)){
-            tmp = secondNumber;
-        } else {
-            tmp = firstNumber;
+    // Create an array with odd numbers
+    static int[] oddArray(){
+        int[] retArray = new int[50];
+        for (int i = 1; i <= retArray.length; i++) {
+            retArray[i - 1] = (i * 2) - 1;
         }
-        return "Из чисел " + firstNumber + " и " + secondNumber + " ближайшее к 10: " + tmp;
+        return retArray;
     }
-    public static String findRoots(float coefA, float coefB, float coefC){
-        double discriminant, x1, x2;
-        discriminant = Math.pow((double) coefB, 2) -  4 * coefA * coefC;
-        if (discriminant < 0){
-            return "При коэффициентах квадратного уравнения: a = " + coefA + ", b = " + coefB + ", c = " + coefC +
-                    "\nУравнение не имеет вещественных корней.";
+    // Revers array elements
+    static void reverseArray(int[] array){
+        for (int i = 0; i < array.length / 2; i++) {
+            int tmp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = tmp;
         }
-        x1 = (-1 * coefB + Math.sqrt(discriminant)) / 2;
-        x2 = (-1 * coefB - Math.sqrt(discriminant)) / 2;
-        return "При коэффициентах квадратного уравнения: a = " + coefA + ", b = " + coefB + ", c = " + coefC +
-                "\nКорни этого уравнения: x1 = " + x1 + ", x2 = " + x2;
     }
-    public static String intervalCompare(int number){
-        String str = "";
-        if ((number <= 25) || (number >= 100)){
-            str = " не";
+    // Count the number of even elements in array
+    static int calculateEvenNumbers(int[] array){
+        int count = 0;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] % 2 == 0)
+                count++;
         }
-        return "Число " + number + str + " содержится в интервале (25, 100).";
+        return count;
     }
-    public static String greatestDigit(int number){
-        int digit = 0;
-        int tmpNumber = number;
-        int tmp;
-        while (number > 0){
-            tmp = number % 10;
-            if(digit < tmp)
-                digit = tmp;
-            number /= 10;
+    // Replace all elements with odd index with '0'
+    static void replaceElementsInArray(int[] array){
+        for (int i = 0; i < array.length; i++) {
+            if (i % 2 != 0)
+                array[i] = 0;
         }
-        return "В числе " + tmpNumber + " наибольшая цифра: " + digit;
     }
-    public static void sorting(int[] array){
-        for (int i = 0; i < array.length - 1; i++){
-            boolean flag = false;
-            for (int j = 0; j < array.length - i - 1; j++){
-                if (array[j] > array[j + 1]){
-                    int tmp = array[j];
-                    array[j] = array[j + 1];
-                    array[j + 1] = tmp;
-                    flag = true;
-                }
+    // Calculate arithmetic mean of array elements
+    static float calculateMean(int[] array){
+        float retValue = 0;
+        for (int i = 0; i < array.length; i++) {
+            retValue += array[i];
+        }
+        return retValue / array.length;
+    }
+    // Check if array is strictly increasing sequence
+    static boolean checkArray(int[] array){
+        for (int i = 0; i < array.length - 1; i++) {
+            if (array[i] >= array[i + 1])
+                return false;
+        }
+        return true;
+    }
+    // Create an array with first 20 elements of Fibonacci set
+    static int[] fibonacciArray(){
+        int[] retArray = new int[20];
+        retArray[0] = retArray[1] = 1;
+        for (int i = 2; i < retArray.length; i++){
+            retArray[i] = retArray[i - 1] + retArray[i - 2];
+        }
+        return retArray;
+    }
+    // Find last index of element with max value
+    static int findIndex(int[] array){
+        int retValue = 0;
+        int tmp = array[0];
+        for (int i = 1; i < array.length; i++) {
+            if (tmp <= array[i]){
+                tmp = array[i];
+                retValue = i;
             }
-            if(flag == false)
-                break;
-        }
-    }
-    public static String secondsToHours(int seconds){
-        String retValue = "";
-        int hours = (seconds / 3600);
-        switch (hours){
-            case 8:
-            case 7:
-            case 6:
-            case 5:
-                retValue = seconds + "\nОсталось " + hours + " часов.";
-                break;
-            case 4:
-            case 3:
-            case 2:
-                retValue = seconds + "\nОсталось " + hours + " часа.";
-                break;
-            case 1:
-                retValue = seconds + "\nОстался " + hours + " час.";
-                break;
-            case 0:
-                retValue = seconds + "\nОсталось менее часа.";
-                break;
         }
         return retValue;
     }
-    public static double factorial(int number){
-        double result = 1;
-        if(number < 2)
-            return result;
-        for (int i = 2; i <= number; i++){
-            result *= i;
+    static int findIntegers(float[] array){
+        int retValue = 0;
+        for (int i = 0; i < array.length; i++){
+            if ((array[i] * 10) % 10 == 0)
+                retValue++;
         }
-        return result;
+        return retValue;
     }
-    public static int sumOfDigit(int number){
-        int result = 0;
-        while (number > 0){
-            result += number % 10;
-            number /= 10;
-        }
-        return result;
-    }
-    public static int luckyTickets(){
-        int[] array = new int[28];
-        int d1, d2, d3, sum, result = 0;
+    // Count the number of same elements
+    static String countElements(int[] array){
+        int[] count = new int[3];
+        int repeat = 0;
+        int maxVal = -1, index = -1;
+        String retValue = "*ничего не выводит*";
 
-        for (int i = 0; i < array.length; i++) {
-            array[i] = 0;
+        for (int i = 0; i < array.length; i++) {        // count the number of same values:
+            count[array[i] + 1]++;                      // count[0] - for '-1', count[1] - for '0', count[2] - for '1'
         }
-        for (int i = 0; i <= 999; i++) {            // counting number of ways to get sum
-            d1 = i / 100;                           // 001 - sum = 1
-            d2 = (i / 10) % 10;                     // 010 - sum = 1
-            d3 = i % 10;                            // 100 - sum = 1
-            sum = d1 + d2 + d3;                     // total: 3 ways to get this sum
-            array[sum]++;
+        for (int i = 0; i < count.length; i++) {        // search for max value
+            if (maxVal < count[i]) {
+                maxVal = count[i];
+                index = i;
+            }
         }
-        for (int i = 0; i < array.length; i++) {    // counting number of lucky tickets
-            result += array[i] * array[i];
+        for (int i = 0; i < count.length; i++) {        // test for repeats
+            if (maxVal == count[i]){
+                repeat++;
+            }
         }
-        result--;                                   // '000000' - don't exist, so need to decrement 'result' by one
-        return result;
-    }
-    public static int wrongLabels(){
-        int result = 0;
-        int[] digits = new int[5];
-
-        for (int i = 1; i <= 50000; i++) {
-            digits[0] = i / 10000;
-            digits[1] = (i / 1000) % 10;
-            digits[2] = (i / 100) % 10;
-            digits[3] = (i / 10) % 10;
-            digits[4] = i % 10;
-            for (int j = 0; j < digits.length; j++) {
-                if (digits[j] == 2) {
-                    result++;
-                    break;
+        if (repeat == 1) {                              // if have no repeats (only one 'maxValue')
+            if (maxVal > 0) {
+                switch (index) {
+                    case 0:
+                        retValue = "В массиве чаще всего встречается '-1' (" + count[0] + " раз.)";
+                        break;
+                    case 1:
+                        retValue = "В массиве чаще всего встречается '0' (" + count[1] + " раз.)";
+                        break;
+                    case 2:
+                        retValue = "В массиве чаще всего встречается '1' (" + count[2] + " раз.)";
+                        break;
                 }
             }
         }
-        return result;
+        return retValue;
     }
-    public static int symmetryFace(){
-        int d1, d2, result = 0;
-        for (int i = 0; i < 24; i++) {
-            d1 = i / 10;
-            d2 = i % 10;
-            if(((d2 * 10) + d1) < 60)
-                result++;
+    static String compareHalves(int[] array){
+        int leftSum = 0, rightSum = 0;
+        if (array.length < 2)
+            return "Что-то он не делится...";
+        for (int i = 0; i < array.length / 2; i++) {
+            leftSum += Math.abs(array[i]);
+            rightSum += Math.abs(array[i + (array.length / 2)]);
         }
-        return result;
+        if (leftSum == rightSum){
+            return "Суммы модулей равны.";
+        } else if (leftSum > rightSum){
+            return "Сумма левой половины больше.";
+        } else {
+            return "Сумма правой половины больше";
+        }
     }
-    public static int excludedMachines(){
-        int result = 0;
-        for (int i = 1; i < 100000; i++) {
-            if(String.valueOf(i).contains("4") || String.valueOf(i).contains("13"))
-                result++;
+    // Search for element with max value
+    static int maxValueInMultiArray(int[][] array, int rows, int columns){
+        int retValue = 0;
+        for (int i = 0; i < rows * columns; i++) {
+            if(retValue < array[i / columns][i % columns]) {
+                retValue = array[i / columns][i % columns];
+            }
         }
-        return result;
+        return retValue;
+    }
+    // Multiplication of elements in array rows
+    static int multiplicationElements(int[][] array){
+        int[] multiplication = new int[array.length];
+        int maxMult = 0, retIndex = -1;
+        Arrays.fill(multiplication, 1);
+        for (int i = 0; i < array.length; i++) {
+            for (int j = 0; j < array[i].length; j++) {
+                multiplication[i] *= array[i][j];
+            }
+        }
+        for (int i = 0; i < multiplication.length; i++) {
+            if (maxMult < Math.abs(multiplication[i])){
+                maxMult = Math.abs(multiplication[i]);
+                retIndex = i;
+            }
+        }
+        return retIndex;
+    }
+    // Place element with max value in beginning of array
+    static void formatArray(int[][] array){
+        for (int i = 0; i < array.length; i++) {
+            for (int j = 1; j < array[i].length; j++) {
+                if (array[i][0] < array[i][j]){
+                    int tmp = array[i][0];
+                    array[i][0] = array[i][j];
+                    array[i][j] = tmp;
+                }
+            }
+        }
+    }
+    // Multiplication table
+    static int[][] multTable(){
+        int[][] retArray = new int[10][10];
+        for (int i = 0; i < retArray.length; i++) {
+            for (int j = 0; j < retArray[i].length; j++) {
+                if (i == 0 || i == 1 || j == 0 || j == 1)
+                    retArray[i][j] = -1;
+                if (retArray[i][j] != -1) {
+                    retArray[i][j] = i * j;
+                    if (i != j)
+                        retArray[j][i] = -1;
+                }
+            }
+        }
+        return retArray;
+    }
+    static String encodeString(String string, String key){
+        byte[] encodeString = string.getBytes();
+        byte[] encodeKey = key.getBytes();
+        
+        for (int i = 0; i < encodeString.length; i++) {
+            encodeString[i] = (byte)(encodeString[i]^encodeKey[i % encodeKey.length]);
+        }
+        System.out.println(Arrays.toString(encodeString));
+        return new String(encodeString);
+    }
+    static String decodeString(String string, String key){
+        byte[] decodeString = string.getBytes(StandardCharsets.UTF_8);
+        byte[] decodeKey = key.getBytes(StandardCharsets.UTF_8);
+        for (int i = 0; i < decodeString.length; i++) {
+            decodeString[i] = (byte)(decodeString[i]^decodeKey[i % decodeKey.length]);
+        }
+        return new String(decodeString);
     }
 }
