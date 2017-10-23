@@ -1,9 +1,9 @@
 public class Container {
-    int value;
+    Object value;
     int index;
     Container next;
 
-    public Container(int value){
+    public Container(Object value){
         this.value = value;
         this.next = null;
     }

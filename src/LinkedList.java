@@ -1,8 +1,22 @@
-public class IntList {
+public class LinkedList {
     Container head;
     int length = 0;
 
-    public void add(int value){
+    public void add(Object object){                     // add new element to the end of list
+        Container container;
+        if (head == null){
+            head = new Container(object);
+        } else {
+            container = head;
+            while (container.next != null){
+                container = container.next;
+            }
+            container.next = new Container(object);
+        }
+        length = indexLoader(head);
+    }
+    /*
+    public void add(Object value){
         Container container;
         if(head == null) {
             head = new Container(value);
@@ -30,7 +44,8 @@ public class IntList {
         }
         length = indexLoader(head);
     }
-    public int get(int index){
+    */
+    public Object get(int index){
         Container container;
         if (index == 0 && head != null){
             return head.value;
@@ -48,8 +63,8 @@ public class IntList {
             return container.value;
         }
     }
-    public int remove(int index){
-        int retVal;
+    public Object remove(int index){
+        Object retVal;
         Container container;
         if (index == 0 && head != null){
             head = head.next;
