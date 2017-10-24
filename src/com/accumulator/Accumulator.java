@@ -1,3 +1,5 @@
+package com.accumulator;
+
 public class Accumulator {
     private double value;
     private Operation operation;

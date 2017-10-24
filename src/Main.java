@@ -1,34 +1,70 @@
+import com.lists.ArrayList;
+import com.lists.LinkedList;
+import com.lists.List;
+import com.lists.Queue;
+import com.lists.Stack;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Применение разных операций:");
-        Accumulator accumulator = new Accumulator(1, new Plus());
-        accumulator.accumulate(2);
-        System.out.println("value + 2: " + accumulator.getValue());
-        accumulator.setOperation(new Power());
-        accumulator.accumulate(2);
-        System.out.println("value^2: " + accumulator.getValue());
-        accumulator.setOperation(new Multiplay());
-        accumulator.accumulate(2);
-        System.out.println("value * 2: " + accumulator.getValue());
-        accumulator.setOperation(new Minus());
-        accumulator.accumulate(2);
-        System.out.println("value - 2: " + accumulator.getValue());
-        accumulator.setOperation(new Divide());
-        accumulator.accumulate(2);
-        System.out.println("value / 2: " + accumulator.getValue());
-
-        // Linked list
-        LinkedList list = new LinkedList();
-        list.add(45);
-        list.add("gdf");
-        list.add(true);
-        for (int i = 0; i < list.length; i++) {
-            System.out.println(list.get(i));
+        // Linked list test
+        List list = new LinkedList();
+        List arrayList = new ArrayList();
+        for (int i = 0; i < 10; i++) {
+            list.add(i);
+            arrayList.add(i);
+        }
+        for (int i = 0; i < list.size(); i++) {
+            System.out.print(list.get(i) + " ");
         }
         System.out.println();
-        list.remove(1);
-        for (int i = 0; i < list.length; i++) {
-            System.out.println(list.get(i));
+        for (int i = 0; i < arrayList.size(); i++) {
+            System.out.print(arrayList.get(i) + " ");
+        }
+        System.out.println();
+        System.out.println(list.remove(4));
+        System.out.println(arrayList.remove(4));
+        for (int i = 0; i < list.size(); i++) {
+            System.out.print(list.get(i) + " ");
+        }
+        System.out.println();
+        for (int i = 0; i < arrayList.size(); i++) {
+            System.out.print(arrayList.get(i) + " ");
+        }
+        System.out.println("\n" + list.get(10));
+        System.out.println(arrayList.get(10));
+        System.out.println();
+
+        // Stack test
+        Stack stack = new LinkedList();
+        Stack arrayStack = new ArrayList();
+        for (int i = 0; i < 10; i++){
+            stack.push(i);
+            arrayStack.push(i);
+        }
+        System.out.print("Стэк: ");
+        for (int i = 0; i < 10; i++) {
+            System.out.print(stack.pop() + " ");
+        }
+        System.out.println();
+        for (int i = 0; i < 10; i++) {
+            System.out.print(arrayStack.pop() + " ");
+        }
+        System.out.println();
+
+        // Queue test
+        Queue queue = new LinkedList();
+        Queue arrayQueue = new ArrayList();
+        for (int i = 0; i < 10; i++) {
+            queue.add(i);
+            arrayQueue.add(i);
+        }
+        System.out.print("Очередь: ");
+        for (int i = 0; i < 10; i++) {
+            System.out.print(queue.pull() + " ");
+        }
+        System.out.println();
+        for (int i = 0; i < 10; i++) {
+            System.out.print(arrayQueue.pull() + " ");
         }
     }
 }

@@ -1,57 +1,37 @@
-public class LinkedList {
-    Container head;
-    int length = 0;
+package com.lists;
 
+public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Queue {
+    private com.lists.Container head;
+    private int length = 0;
+
+    @Override
     public void add(Object object){                     // add new element to the end of list
-        Container container;
+        com.lists.Container container;
         if (head == null){
-            head = new Container(object);
+            head = new com.lists.Container(object);
         } else {
             container = head;
             while (container.next != null){
                 container = container.next;
             }
-            container.next = new Container(object);
+            container.next = new com.lists.Container(object);
         }
         length = indexLoader(head);
     }
-    /*
-    public void add(Object value){
-        Container container;
-        if(head == null) {
-            head = new Container(value);
-        } else {
-            if (head.value > value){
-                Container tmp = new Container(value);
-                tmp.next = head;
-                head = tmp;
-                length = indexLoader(head);
-                return;
-            }
-            container = head;
-            while (container.next != null){
-                if (container.next.value > value){
-                    Container tmp = new Container(value);
-                    tmp.next = container.next;
-                    container.next = tmp;
-                    break;
-                }
-                container = container.next;
-            }
-            if (container.next == null){
-                container.next = new Container(value);
-            }
-        }
-        length = indexLoader(head);
+
+    @Override
+    public Object pull() {
+        return pop();
     }
-    */
+
+    @Override
     public Object get(int index){
-        Container container;
+        com.lists.Container container;
         if (index == 0 && head != null){
             return head.value;
         } else {
             if (head == null)
-                return -1;
+                return null;
             container = head;
             while (container.next != null){
                 if (container.index == index)
@@ -59,20 +39,20 @@ public class LinkedList {
                 container = container.next;
             }
             if (container.index != index)
-                return -1;
+                return null;
             return container.value;
         }
     }
+
+    @Override
     public Object remove(int index){
         Object retVal;
-        Container container;
-        if (index == 0 && head != null){
+        com.lists.Container container;
+        if (index == 0){
+            retVal = head;
             head = head.next;
-            length = indexLoader(head);
-            return head.value;
+            return retVal;
         }
-        if (head == null)
-            return -1;
         container = head;
         while (container.next.next != null){
             if (container.next.index == index)
@@ -80,13 +60,14 @@ public class LinkedList {
             container = container.next;
         }
         if (container.next.index != index)
-            return -1;
+            return null;
         retVal = container.next.value;
         container.next = container.next.next;
         length = indexLoader(head);
         return retVal;
     }
-    private int indexLoader(Container container){
+
+    private int indexLoader(com.lists.Container container){
         int index = 0;
         container.index = index;
         index++;
@@ -96,5 +77,31 @@ public class LinkedList {
             index++;
         }
         return index;
+    }
+
+    @Override
+    public int size(){
+        return length;
+    }
+
+    @Override
+    public void push(Object object) {
+        if (head == null){
+            head = new com.lists.Container(object);
+            return;
+        }
+        com.lists.Container container = new com.lists.Container(object);
+        container.next = head;
+        head = container;
+    }
+
+    @Override
+    public Object pop() {
+        if (head == null){
+            return null;
+        }
+        Object retVal = head.value;
+        head = head.next;
+        return retVal;
     }
 }
