@@ -1,5 +1,7 @@
 package com.lists;
 
+import java.util.Iterator;
+
 public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Queue {
     private com.lists.Container head;
     private int length = 0;
@@ -103,5 +105,26 @@ public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Qu
         Object retVal = head.value;
         head = head.next;
         return retVal;
+    }
+
+    @Override
+    public Iterator iterator() {
+        return new Iterator() {
+            Container container = LinkedList.this.head;
+
+            @Override
+            public boolean hasNext() {
+                if (container != null)
+                    return true;
+                return false;
+            }
+
+            @Override
+            public Object next() {
+                Object retVal = container.value;
+                container = container.next;
+                return retVal;
+            }
+        };
     }
 }

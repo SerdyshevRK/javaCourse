@@ -1,5 +1,8 @@
 package com.lists;
 
+import javax.swing.text.html.HTMLDocument;
+import java.util.Iterator;
+
 public class ArrayList implements com.lists.List, com.lists.Stack, com.lists.Queue {
     private Object[] values = new Object[5];
     private int lastElement = -1;
@@ -63,5 +66,23 @@ public class ArrayList implements com.lists.List, com.lists.Stack, com.lists.Que
         Object[] retArray = new Object[values.length * 2];
         System.arraycopy(values, 0, retArray, 0, values.length);
         return retArray;
+    }
+
+    @Override
+    public Iterator iterator() {
+        return new Iterator() {
+            int index;
+            @Override
+            public boolean hasNext() {
+                if (index <= ArrayList.this.lastElement)
+                    return true;
+                return false;
+            }
+
+            @Override
+            public Object next() {
+                return ArrayList.this.get(index++);
+            }
+        };
     }
 }

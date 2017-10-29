@@ -1,6 +1,8 @@
 package com.lists;
 
-public interface List {
+import java.util.Iterator;
+
+public interface List extends Iterable {
     void add(Object object);
     Object get(int index);
     Object remove(int index);
