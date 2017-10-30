@@ -41,4 +41,9 @@ public class Book {
                     return true;
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "Book: " + "название: " + title + " автор: " + author + " количество страниц: " + pagesNum + "\n";
+    }
 }

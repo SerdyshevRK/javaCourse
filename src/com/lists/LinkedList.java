@@ -7,6 +7,34 @@ public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Qu
     private int length = 0;
 
     @Override
+    public int hashCode() {
+        int retVal = 0;
+        Container container = head;
+        while (container.next != null){
+            retVal += container.hashCode();
+            container = container.next;
+        }
+        return retVal;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof LinkedList))
+            return false;
+        if (this.hashCode() != obj.hashCode())
+            return false;
+        Container container = head;
+        Container objContainer = ((LinkedList) obj).head;
+        while (container.next != null){
+            if (!container.equals(objContainer))
+                return false;
+            container = container.next;
+            objContainer = objContainer.next;
+        }
+        return true;
+    }
+
+    @Override
     public void add(Object object){                     // add new element to the end of list
         com.lists.Container container;
         if (head == null){
@@ -53,6 +81,7 @@ public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Qu
         if (index == 0){
             retVal = head;
             head = head.next;
+            length = indexLoader(head);
             return retVal;
         }
         container = head;
