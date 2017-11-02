@@ -1,6 +1,6 @@
 package com.library;
 import com.accumulator.Operation;
-import com.lists.BidirectionalList;
+import com.lists.LinkedList;
 import com.lists.List;
 
 public class Library {
@@ -8,7 +8,7 @@ public class Library {
 
     public Library(){
         for (int i = 0; i < shelves.length; i++) {
-            shelves[i] = new BidirectionalList();
+            shelves[i] = new LinkedList();
         }
     }
 

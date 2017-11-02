@@ -28,7 +28,7 @@ public class LazyAccumulator {
                 this.value = data.operation.doOperation(this.value, data.value);
             }
         } else {
-            Stack tmp = new BidirectionalList();
+            Stack tmp = new LinkedList();
             while ((data = (Data) stack.pop()) != null) {
                 tmp.push(data);
             }

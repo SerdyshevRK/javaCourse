@@ -1,6 +1,7 @@
 package com.lists;
 
-public interface Queue {
-    void add(Object object);
-    Object pull();
+public interface Queue<T> {
+    void enqueue(T object);
+    T dequeue();
+    T queuePeek();
 }

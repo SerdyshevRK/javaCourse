@@ -2,158 +2,171 @@ package com.lists;
 
 import java.util.Iterator;
 
-public class LinkedList implements com.lists.List, com.lists.Stack, com.lists.Queue {
-    private com.lists.Container head;
-    private int length = 0;
+public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
+    Item head;
+    Item tail;
 
-    @Override
-    public int hashCode() {
-        int retVal = 0;
-        Container container = head;
-        while (container.next != null){
-            retVal += container.hashCode();
-            container = container.next;
-        }
-        return retVal;
+    public LinkedList(){
+        this.head = null;
+        this.tail = null;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof LinkedList))
-            return false;
-        if (this.hashCode() != obj.hashCode())
-            return false;
-        Container container = head;
-        Container objContainer = ((LinkedList) obj).head;
-        while (container.next != null){
-            if (!container.equals(objContainer))
-                return false;
-            container = container.next;
-            objContainer = objContainer.next;
-        }
-        return true;
-    }
-
-    @Override
-    public void add(Object object){                     // add new element to the end of list
-        com.lists.Container container;
-        if (head == null){
-            head = new com.lists.Container(object);
-        } else {
-            container = head;
-            while (container.next != null){
-                container = container.next;
-            }
-            container.next = new com.lists.Container(object);
-        }
-        length = indexLoader(head);
-    }
-
-    @Override
-    public Object pull() {
-        return pop();
-    }
-
-    @Override
-    public Object get(int index){
-        com.lists.Container container;
-        if (index == 0 && head != null){
-            return head.value;
-        } else {
-            if (head == null)
-                return null;
-            container = head;
-            while (container.next != null){
-                if (container.index == index)
-                    break;
-                container = container.next;
-            }
-            if (container.index != index)
-                return null;
-            return container.value;
-        }
-    }
-
-    @Override
-    public Object remove(int index){
-        Object retVal;
-        com.lists.Container container;
-        if (index == 0){
-            retVal = head;
-            head = head.next;
-            length = indexLoader(head);
-            return retVal;
-        }
-        container = head;
-        while (container.next.next != null){
-            if (container.next.index == index)
-                break;
-            container = container.next;
-        }
-        if (container.next.index != index)
-            return null;
-        retVal = container.next.value;
-        container.next = container.next.next;
-        length = indexLoader(head);
-        return retVal;
-    }
-
-    private int indexLoader(com.lists.Container container){
-        int index = 0;
-        container.index = index;
-        index++;
-        while (container.next != null){
-            container = container.next;
-            container.index = index;
-            index++;
-        }
-        return index;
-    }
-
-    @Override
     public int size(){
-        return length;
+        int count = 0;
+        Item item = head;
+        while (item.next != null){
+            count++;
+            item = item.next;
+        }
+        return count;
     }
 
     @Override
-    public void push(Object object) {
+    public void add(T object) {
         if (head == null){
-            head = new com.lists.Container(object);
+            head = new Item(object);
+            tail = head;
             return;
         }
-        com.lists.Container container = new com.lists.Container(object);
-        container.next = head;
-        head = container;
+        Item item = tail;
+        item.next = new Item(object);
+        tail = item.next;
+        tail.prev = item;
     }
 
     @Override
-    public Object pop() {
-        if (head == null){
-            return null;
+    public T get(int index) {
+        if (index == 0)
+            return (T) head.value;
+
+        Item item = findItem(index);
+        if (item != null)
+            return (T) item.value;
+        return null;
+    }
+
+    @Override
+    public T remove(int index) {
+        Object retValue;
+
+        if (index == 0){
+            retValue = head.value;
+            head = head.next;
+            if (head != null)
+                head.prev = null;
+            return (T) retValue;
         }
-        Object retVal = head.value;
-        head = head.next;
-        return retVal;
+
+        Item item = findItem(index);
+        retValue = item.value;
+        item.prev.next = item.next;
+        item.next.prev = item.prev;
+        return (T) retValue;
+    }
+
+    private Item findItem(int index){
+        Item item = head.next;
+        int count = 1;
+        while (count != index){
+            item = item.next;
+            count++;
+        }
+        return item;
+    }
+
+    @Override
+    public void push(T object) {
+        add(object);
+    }
+
+    @Override
+    public T pop() {
+        Object retValue = peek();
+        if (retValue != null) {
+            tail = tail.prev;
+            if (tail != null)
+                tail.next = null;
+        }
+        return (T) retValue;
+    }
+
+    @Override
+    public T peek() {
+        if (tail == null)
+            return null;
+
+        return (T) tail.value;
+    }
+
+    @Override
+    public void enqueue(T object) {
+        add(object);
+    }
+
+    @Override
+    public T dequeue() {
+        Object retValue = queuePeek();
+        if (retValue != null){
+            head = head.next;
+            if (head != null)
+                head.prev = null;
+        }
+        return (T) retValue;
+    }
+
+    @Override
+    public T queuePeek() {
+        if (head == null)
+            return null;
+
+        return (T) head.value;
     }
 
     @Override
     public Iterator iterator() {
         return new Iterator() {
-            Container container = LinkedList.this.head;
+            Item item = head;
 
             @Override
             public boolean hasNext() {
-                if (container != null)
-                    return true;
-                return false;
+                return item != null;
             }
 
             @Override
             public Object next() {
-                Object retVal = container.value;
-                container = container.next;
-                return retVal;
+                Object retValue = item.value;
+                item = item.next;
+                return retValue;
             }
         };
+    }
+
+    @Override
+    public int hashCode() {
+        int retValue = 0;
+        Item item = head;
+        while (item.next != null){
+            retValue += item.hashCode();
+            item = item.next;
+        }
+        return retValue;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this.getClass() != obj.getClass())
+            return false;
+        if (this.hashCode() != ((LinkedList<T>) obj).hashCode())
+            return false;
+
+        Item item = head;
+        Item objItem = ((LinkedList<T>) obj).head;
+        while (item.next != null){
+            if (!item.value.equals(objItem.value))
+                return false;
+            item = item.next;
+            objItem = objItem.next;
+        }
+        return true;
     }
 }

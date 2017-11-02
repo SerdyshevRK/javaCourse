@@ -1,6 +1,7 @@
 package com.lists;
 
-public interface Stack {
-    void push(Object object);
-    Object pop();
+public interface Stack<T> {
+    void push(T object);
+    T pop();
+    T peek();
 }
