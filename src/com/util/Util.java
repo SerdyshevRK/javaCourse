@@ -1,4 +1,5 @@
 package com.util;
+import com.lists.exceptions.NullValueException;
 import com.lists.*;
 
 import java.util.Iterator;
@@ -125,7 +126,7 @@ public final class Util {
         }
         return list;
     }
-    public static List intersect(List firstList, List secondList, Predicate2 predicate){
+    public static List intersect(List firstList, List secondList, Predicate2 predicate) throws NullValueException{
         if (firstList == null || secondList == null)
             return null;
         List retVal = new LinkedList();
@@ -151,7 +152,7 @@ public final class Util {
         }
         return retVal;
     }
-    public static List difference(List firstList, List secondList, Predicate2 predicate){
+    public static List difference(List firstList, List secondList, Predicate2 predicate) throws NullValueException {
         if (firstList == null || secondList == null)
             return null;
         List retVal = new LinkedList();

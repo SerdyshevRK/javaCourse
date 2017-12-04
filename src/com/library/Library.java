@@ -1,5 +1,6 @@
 package com.library;
 import com.accumulator.Operation;
+import com.lists.exceptions.NullValueException;
 import com.lists.LinkedList;
 import com.lists.List;
 
@@ -12,7 +13,7 @@ public class Library {
         }
     }
 
-    public void put(Book book, int quantity){
+    public void put(Book book, int quantity) throws NullValueException {
         BookCase bookCase;
         int i = Math.abs(book.hashCode()) % shelves.length;
         if (shelves[i] != null) {
@@ -32,7 +33,7 @@ public class Library {
         shelves[i].add(bookCase);
     }
 
-    public int get(Book book, int quantity){
+    public int get(Book book, int quantity) throws NullValueException {
         BookCase bookCase;
         int retVal;
         int i = Math.abs(book.hashCode()) % shelves.length;

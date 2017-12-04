@@ -1,4 +1,7 @@
 package com.lists;
+import com.lists.exceptions.ConcurrentModificationException;
+import com.lists.exceptions.NullValueException;
+
 import java.util.Iterator;
 
 public class ArrayList<T> implements List<T>, Stack<T>, Queue<T> {
@@ -28,8 +31,11 @@ public class ArrayList<T> implements List<T>, Stack<T>, Queue<T> {
     }
 
     @Override
-    public T get(int index) {
-        return (T) values[index];
+    public T get(int index) throws NullValueException {
+        T retVal = (T) values[index];
+        if (retVal != null)
+            return retVal;
+        throw new NullValueException();
     }
 
     @Override
@@ -84,9 +90,12 @@ public class ArrayList<T> implements List<T>, Stack<T>, Queue<T> {
     public Iterator iterator() {
         return new Iterator() {
             int index = 0;
+            int check = lastElement;
 
             @Override
             public boolean hasNext() {
+                if (check != lastElement)
+                    throw new ConcurrentModificationException();
                 return index <= lastElement;
             }
 

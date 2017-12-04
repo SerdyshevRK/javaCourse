@@ -1,14 +1,18 @@
 package com.lists;
 
+import com.lists.exceptions.ConcurrentModificationException;
+import com.lists.exceptions.NullValueException;
 import java.util.Iterator;
 
 public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
     Item head;
     Item tail;
+    int length;
 
     public LinkedList(){
         this.head = null;
         this.tail = null;
+        this.length = 0;
     }
 
     public int size(){
@@ -32,17 +36,21 @@ public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
         item.next = new Item(object);
         tail = item.next;
         tail.prev = item;
+        length++;
     }
 
     @Override
-    public T get(int index) {
-        if (index == 0)
-            return (T) head.value;
+    public T get(int index) throws NullValueException {
+        if (index == 0) {
+            if (head != null)
+                return (T) head.value;
+            throw new NullValueException();
+        }
 
         Item item = findItem(index);
         if (item != null)
             return (T) item.value;
-        return null;
+        throw new NullValueException();
     }
 
     @Override
@@ -54,6 +62,7 @@ public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
             head = head.next;
             if (head != null)
                 head.prev = null;
+            length--;
             return (T) retValue;
         }
 
@@ -87,6 +96,7 @@ public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
             if (tail != null)
                 tail.next = null;
         }
+        length--;
         return (T) retValue;
     }
 
@@ -111,6 +121,7 @@ public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
             if (head != null)
                 head.prev = null;
         }
+        length--;
         return (T) retValue;
     }
 
@@ -126,9 +137,12 @@ public class LinkedList<T> implements List<T>, Stack<T>, Queue<T> {
     public Iterator iterator() {
         return new Iterator() {
             Item item = head;
+            int check = length;
 
             @Override
             public boolean hasNext() {
+                if (check != length)
+                    throw new ConcurrentModificationException();
                 return item != null;
             }
 
