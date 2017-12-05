@@ -3,6 +3,12 @@ package com.multithreading.eatery;
 import java.util.Scanner;
 
 public class EateryMain {
+    enum Direction {
+        COOK, CUSTOMER
+    }
+    private static boolean isAllowed;
+    private static Direction direction = Direction.CUSTOMER;
+
     public static void main(String[] args) {
         Customer customer = new Customer();
         Waiter waiter = new Waiter();
@@ -17,13 +23,20 @@ public class EateryMain {
                     synchronized (cook) {
                         try {
                             cook.wait();
+                            if (!isAllowed)
+                                continue;
+                            isAllowed = false;
                             cook.prepare();
+
+                            synchronized (waiter) {
+                                direction = Direction.CUSTOMER;
+                                isAllowed = true;
+                                waiter.notify();
+                            }
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
+                            System.out.println(Thread.currentThread().getName() + " closing...");
                         }
-                    }
-                    synchronized (waiter) {
-                        waiter.notify();
                     }
                 }
             }
@@ -37,17 +50,27 @@ public class EateryMain {
                     synchronized (waiter) {
                         try {
                             waiter.wait();
-                            synchronized (cook) {
-                                cook.setOrder(waiter.getOrder());
-                                cook.notify();
+                            if (!isAllowed)
+                                continue;
+                            isAllowed = false;
+                            if (direction == Direction.COOK) {
+                                synchronized (cook) {
+                                    cook.setOrder(waiter.getOrder());
+                                    isAllowed = true;
+                                    cook.notify();
+                                }
+                                continue;
                             }
-                            waiter.wait();
-                            waiter.deliver();
-                            synchronized (customer) {
-                                customer.notify();
+                            if (direction == Direction.CUSTOMER) {
+                                waiter.deliver();
+                                synchronized (customer) {
+                                    isAllowed = true;
+                                    customer.notify();
+                                }
                             }
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
+                            System.out.println(Thread.currentThread().getName() + " closing...");
                         }
                     }
                 }
@@ -57,20 +80,35 @@ public class EateryMain {
         Thread customerThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                String order;
                 Thread.currentThread().setName("customer");
                 while (!Thread.currentThread().isInterrupted()) {
-                    System.out.println("What exactly I want? Hmm...");
-                    customer.setOrder(sc.nextLine());
-                    synchronized (waiter) {
-                        waiter.setOrder(customer.getOrder());
-                        waiter.notify();
+                    if (direction == Direction.CUSTOMER) {
+                        System.out.println("What exactly I want? Hmm...");
+                        order = sc.nextLine();
+                        if (order.equals("exit")) {
+                            waiterThread.interrupt();
+                            cookThread.interrupt();
+                            Thread.currentThread().interrupt();
+                        }
+                        customer.setOrder(order);
+                        synchronized (waiter) {
+                            waiter.setOrder(customer.getOrder());
+                            direction = Direction.COOK;
+                            isAllowed = true;
+                            waiter.notify();
+                        }
                     }
                     synchronized (customer) {
                         try {
                             customer.wait();
+                            if (!isAllowed)
+                                continue;
+                            isAllowed = false;
                             customer.eating();
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
+                            System.out.println(Thread.currentThread().getName() + " closing...");
                         }
                     }
                 }
