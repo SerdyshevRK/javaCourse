@@ -24,15 +24,14 @@ public class Analyzer {
 
         // split lines to a words
         words = readWords(lines);
-
 //        // count the occurrence of words in the text
-//        wordsOccurrence = countWords(words);
+        wordsOccurrence = countWords(words);
 //        for (Map.Entry<String, Integer> entry : wordsOccurrence.entrySet()) {
 //            System.out.println("Word '" + entry.getKey() + "' occurs in the text " + entry.getValue() + " times.");
 //        }
 //
         // count the occurrence of phrases in the text
-        phrasesOccurrence = countPhrases(2, words);
+//        phrasesOccurrence = countPhrases(2, words);
 //        for (Map.Entry<String, Integer> entry : phrasesOccurrence.entrySet()) {
 //            System.out.println("Phrase '" + entry.getKey() + "' occurs in the text " + entry.getValue() + " times.");
 //        }
@@ -55,9 +54,9 @@ public class Analyzer {
 //
 //        // top ten most used words and phrases in text
 //        System.out.println("Десять наиболее часто встречающихся слов в тексте:");
-//        printTopTenWords(wordsOccurrence);
-        System.out.println("Десять наиболее часто встречающихся фраз в тексте:");
-        printTopTenWords(phrasesOccurrence);
+        printTopWords(wordsOccurrence, 10);
+//        System.out.println("Десять наиболее часто встречающихся фраз в тексте:");
+//        printTopTenWords(phrasesOccurrence);
     }
 
     private static List<String> readWords(List<String> lines){
@@ -68,7 +67,7 @@ public class Analyzer {
             String[] wordSplit =
                     line.toLowerCase() // Переводим в нижний регистр
                             .replaceAll("\\p{Punct}", " ") // Заменяем все знаки на пробел
-                            .replaceAll("\"", "")
+//                            .replaceAll("\"", "")
                             .trim() // Убираем пробелы в начале и конце строки.
                             .split("\\s"); // Разбиваем строки на слова
 
@@ -122,32 +121,28 @@ public class Analyzer {
         return groups;
     }
 
-    private static void printTopTenWords(Map<String, Integer> map) {
+    private static void printTopWords(Map<String, Integer> map, int range) {
 
+        String[] top = new String[range];
         List<Integer> values = new ArrayList<>();
-        for (Integer integer : map.values()) {
-            values.add(integer);
+
+        for (Integer value : map.values()) {
+            values.add(value);
         }
         values.sort(new Comparator<Integer>() {
             @Override
             public int compare(Integer o1, Integer o2) {
-
                 return -1 * (o1 - o2);
             }
         });
 
-        Object[] arr = values.toArray();
-        int count;
-        String s = ", ";
-        for (int i = 0; i < 10; i++) {
-            count = i;
-            for (Map.Entry<String, Integer> e : map.entrySet()) {
-                if (e.getValue() == arr[i]) {
-                    if (count == 9) s = "";
-                    System.out.print(e.getKey().toString() + s);
-                }
+        for (int i = 0; i < range; i++) {
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                if (entry.getValue() == values.get(i))
+                    top[i] = entry.getKey();
             }
         }
+        System.out.println(Arrays.toString(top));
     }
 
     private static Map<String, Integer> countWords(List<String> words) {
@@ -180,5 +175,12 @@ public class Analyzer {
             sb.setLength(0);
         }
         return map;
+    }
+
+    private class AnalizerThread implements Runnable {
+        @Override
+        public void run() {
+
+        }
     }
 }
