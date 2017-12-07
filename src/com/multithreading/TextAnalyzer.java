@@ -27,6 +27,7 @@ public class TextAnalyzer {
                 thread.join();
             }
             thread = new Thread(analyzer.new AnalyzerThread(words.subList(k, k + pieceLength)));
+            thread.start();
             thread.join();
         }
 

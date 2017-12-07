@@ -90,6 +90,7 @@ public class EateryMain {
                             waiterThread.interrupt();
                             cookThread.interrupt();
                             Thread.currentThread().interrupt();
+                            continue;
                         }
                         customer.setOrder(order);
                         synchronized (waiter) {
