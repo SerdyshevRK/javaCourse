@@ -23,9 +23,12 @@ public class Analyzer {
         }
 
         // split lines to a words
+
         words = readWords(lines);
 //        // count the occurrence of words in the text
+
         wordsOccurrence = countWords(words);
+
 //        for (Map.Entry<String, Integer> entry : wordsOccurrence.entrySet()) {
 //            System.out.println("Word '" + entry.getKey() + "' occurs in the text " + entry.getValue() + " times.");
 //        }
@@ -66,7 +69,8 @@ public class Analyzer {
             // Для каждой строки
             String[] wordSplit =
                     line.toLowerCase() // Переводим в нижний регистр
-                            .replaceAll("\\p{Punct}", " ") // Заменяем все знаки на пробел
+                            .replaceAll("\\pP", " ")
+//                            .replaceAll("\\p{Punct}", " ") // Заменяем все знаки на пробел
 //                            .replaceAll("\"", "")
                             .trim() // Убираем пробелы в начале и конце строки.
                             .split("\\s"); // Разбиваем строки на слова

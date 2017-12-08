@@ -1,36 +1,45 @@
 package com.multithreading;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class TextAnalyzer {
 
+    BlockingQueue<String> input = new ArrayBlockingQueue<>(50);
+    BlockingQueue<Map<String, Integer>> output = new ArrayBlockingQueue<>(4);
     Map<String, Integer> wordsOccurrence = new TreeMap<>();
+    private final static String STOP = new String();
 
     public static void main(String[] args) throws Exception {
         File file = new File("E:/ITMO/Learning/Practice/wp/wp.txt");
-        List<String> words;
+        List<String> lines = Files.readAllLines(file.toPath());
         TextAnalyzer analyzer = new TextAnalyzer();
         int cpuCounter = Runtime.getRuntime().availableProcessors();
-        words = analyzer.readWords(file);
-        int pieceLength = words.size() / cpuCounter;
-        int k;
         Thread thread;
 
+        // запуск потоков в количестве равном количеству доступных ядер
         for (int i = 0; i < cpuCounter; i++) {
-            k = i * pieceLength;
-            if (i == cpuCounter - 1) {
-                thread = new Thread(analyzer.new AnalyzerThread(words.subList(k, words.size())));
-                thread.start();
-                thread.join();
-            }
-            thread = new Thread(analyzer.new AnalyzerThread(words.subList(k, k + pieceLength)));
+            thread = new Thread(analyzer.new AnalyzerThread(analyzer.input, analyzer.output));
             thread.start();
-            thread.join();
         }
 
+        // запись строк из файла в очередь для потоков
+        for (String line : lines) {
+            if (line.length() > 0)
+                analyzer.input.put(line);
+        }
+        analyzer.input.put(STOP);
+
+        // получение результатов работы потоков в виде 'Map<String, Integer>'
+        // и сведение результатов в общую мапу
+        for (int i = 0; i < cpuCounter; i++) {
+            analyzer.mergeResults(analyzer.output.take());
+        }
+
+        // вывод топа слов в консоль
         analyzer.printTop(10);
     }
 
@@ -57,26 +66,26 @@ public class TextAnalyzer {
         System.out.println(Arrays.toString(top));
     }
 
-    private List<String> readWords(File file) throws IOException {
-        List<String> retWords = new ArrayList<>();
-        List<String> lines = Files.readAllLines(file.toPath());
+    private List<String> readWords(String line) {
+        List<String> words = new ArrayList<>();
+        String[] wordsArray = line.toLowerCase()
+                .replaceAll("\\pP", " ")
+//                .replaceAll("\\p{Punct}", " ")
+//                .replaceAll("\"", "")
+                .trim()
+                .split("\\s");
 
-        for (String line : lines) {
-            String[] wordSplit = line.toLowerCase()
-                                .replaceAll("\\p{Punct}", " ")
-                                .trim()
-                                .split("\\s");
-
-            for (String string : wordSplit) {
-                if (string.length() > 0)
-                    retWords.add(string.trim());
+        for (String word : wordsArray) {
+            if (word.length() > 0) {
+                word.trim();
+                words.add(word);
             }
         }
-        return retWords;
+
+        return words;
     }
 
-    private Map<String, Integer> countWords(List<String> words) {
-        Map<String, Integer> map = new TreeMap<>();
+    private void countWords(Map<String, Integer> map, List<String> words) {
         for (String word : words) {
             if (map.containsKey(word)){
                 map.put(word, map.get(word) + 1);
@@ -84,7 +93,6 @@ public class TextAnalyzer {
                 map.put(word, 1);
             }
         }
-        return map;
     }
 
     private synchronized void mergeResults(Map<String, Integer> map) {
@@ -98,16 +106,35 @@ public class TextAnalyzer {
     }
 
     private class AnalyzerThread implements Runnable {
+        BlockingQueue<String> input;
+        BlockingQueue<Map<String, Integer>> output;
+        String line;
+        Map<String, Integer> innerMap = new HashMap<>();
         List<String> words;
 
-        public AnalyzerThread(List<String> words) {
-            this.words = words;
+        public AnalyzerThread(BlockingQueue<String> input, BlockingQueue<Map<String, Integer>> output) {
+            this.input = input;
+            this.output = output;
         }
 
         @Override
         public void run() {
-            Map<String, Integer> innerMap = countWords(words);
-            mergeResults(innerMap);
+            try {
+                while (true) {
+                    line = input.take();
+                    if (line == STOP) {
+                        input.put(STOP);
+                        break;
+                    }
+
+                    words = readWords(line);
+                    countWords(innerMap, words);
+                }
+
+                output.put(innerMap);
+            } catch(InterruptedException e){
+                e.printStackTrace();
+            }
         }
     }
 }
