@@ -4,30 +4,47 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Analyzer {
     public static void main(String[] args) {
         File text = new File("E:/ITMO/Learning/Practice/wp/wp.txt");
-        List<String> lines;
         List<String> words;
         Map<String, Integer> wordsOccurrence;
         Map<String, Integer> phrasesOccurrence;
         Map<String, Integer> groups;
 
-        // if file exists, read all lines from this file
         try {
-            lines = Files.readAllLines(text.toPath());
+            words = Files.lines(text.toPath())
+                    .parallel()
+                    .map(line -> line.toLowerCase().replaceAll("\\pP", " "))
+                    .flatMap(line -> Arrays.stream(line.split(" ")))
+                    .map(String::trim)
+                    .filter(word -> !"".equals(word))
+                    .collect(Collectors.toList());
+
+            wordsOccurrence = countWords(words);
+            printTopWords(wordsOccurrence, 10);
         } catch (IOException e) {
             e.printStackTrace();
-            return;
         }
+
+
+
+        // if file exists, read all lines from this file
+//        try {
+//            lines = Files.readAllLines(text.toPath());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
 
         // split lines to a words
 
-        words = readWords(lines);
+//        words = readWords(lines);
 //        // count the occurrence of words in the text
 
-        wordsOccurrence = countWords(words);
+
 
 //        for (Map.Entry<String, Integer> entry : wordsOccurrence.entrySet()) {
 //            System.out.println("Word '" + entry.getKey() + "' occurs in the text " + entry.getValue() + " times.");
@@ -57,7 +74,7 @@ public class Analyzer {
 //
 //        // top ten most used words and phrases in text
 //        System.out.println("Десять наиболее часто встречающихся слов в тексте:");
-        printTopWords(wordsOccurrence, 10);
+
 //        System.out.println("Десять наиболее часто встречающихся фраз в тексте:");
 //        printTopTenWords(phrasesOccurrence);
     }

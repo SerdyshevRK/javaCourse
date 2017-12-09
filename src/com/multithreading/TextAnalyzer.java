@@ -3,14 +3,16 @@ package com.multithreading;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TextAnalyzer {
 
     BlockingQueue<String> input = new ArrayBlockingQueue<>(50);
     BlockingQueue<Map<String, Integer>> output = new ArrayBlockingQueue<>(4);
-    Map<String, Integer> wordsOccurrence = new TreeMap<>();
+    Map<String, Long> wordsOccurrence = new TreeMap<>();
     private final static String STOP = new String();
 
     public static void main(String[] args) throws Exception {
@@ -18,12 +20,15 @@ public class TextAnalyzer {
         List<String> lines = Files.readAllLines(file.toPath());
         TextAnalyzer analyzer = new TextAnalyzer();
         int cpuCounter = Runtime.getRuntime().availableProcessors();
-        Thread thread;
 
-        // запуск потоков в количестве равном количеству доступных ядер
+        ExecutorService pool = Executors.newFixedThreadPool(cpuCounter);
+        List<FutureTask<Map<String, Long>>> tasks = new ArrayList<>();
         for (int i = 0; i < cpuCounter; i++) {
-            thread = new Thread(analyzer.new AnalyzerThread(analyzer.input, analyzer.output));
-            thread.start();
+            tasks.add(new FutureTask(analyzer.new AnalyzerThread(analyzer.input)));
+        }
+
+        for (FutureTask<Map<String, Long>> task : tasks) {
+            pool.submit(task);
         }
 
         // запись строк из файла в очередь для потоков
@@ -33,45 +38,28 @@ public class TextAnalyzer {
         }
         analyzer.input.put(STOP);
 
-        // получение результатов работы потоков в виде 'Map<String, Integer>'
-        // и сведение результатов в общую мапу
-        for (int i = 0; i < cpuCounter; i++) {
-            analyzer.mergeResults(analyzer.output.take());
+        for (FutureTask<Map<String, Long>> task : tasks) {
+            analyzer.mergeResults(task.get());
         }
-
+        pool.shutdown();
         // вывод топа слов в консоль
         analyzer.printTop(10);
     }
 
     private void printTop(int range) {
-        String[] top = new String[range];
-        List<Integer> values = new ArrayList<>();
+        List<String> top = wordsOccurrence.entrySet().stream()
+                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
+                .limit(range)
+                .map(e -> e.getKey())
+                .collect(Collectors.toList());
 
-        for (Integer value : wordsOccurrence.values()) {
-            values.add(value);
-        }
-        values.sort(new Comparator<Integer>() {
-            @Override
-            public int compare(Integer o1, Integer o2) {
-                return -1 * (o1 - o2);
-            }
-        });
-
-        for (int i = 0; i < range; i++) {
-            for (Map.Entry<String, Integer> entry : wordsOccurrence.entrySet()) {
-                if (entry.getValue() == values.get(i))
-                    top[i] = entry.getKey();
-            }
-        }
-        System.out.println(Arrays.toString(top));
+        System.out.println(top.toString());
     }
 
     private List<String> readWords(String line) {
         List<String> words = new ArrayList<>();
         String[] wordsArray = line.toLowerCase()
                 .replaceAll("\\pP", " ")
-//                .replaceAll("\\p{Punct}", " ")
-//                .replaceAll("\"", "")
                 .trim()
                 .split("\\s");
 
@@ -85,18 +73,18 @@ public class TextAnalyzer {
         return words;
     }
 
-    private void countWords(Map<String, Integer> map, List<String> words) {
+    private void countWords(Map<String, Long> map, List<String> words) {
         for (String word : words) {
             if (map.containsKey(word)){
                 map.put(word, map.get(word) + 1);
             } else {
-                map.put(word, 1);
+                map.put(word, 1L);
             }
         }
     }
 
-    private synchronized void mergeResults(Map<String, Integer> map) {
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+    private synchronized void mergeResults(Map<String, Long> map) {
+        for (Map.Entry<String, Long> entry : map.entrySet()) {
             if (wordsOccurrence.containsKey(entry.getKey())) {
                 wordsOccurrence.put(entry.getKey(), entry.getValue() + wordsOccurrence.get(entry.getKey()));
                 continue;
@@ -105,20 +93,18 @@ public class TextAnalyzer {
         }
     }
 
-    private class AnalyzerThread implements Runnable {
+    private class AnalyzerThread implements Callable<Map<String, Long>> {
         BlockingQueue<String> input;
-        BlockingQueue<Map<String, Integer>> output;
         String line;
-        Map<String, Integer> innerMap = new HashMap<>();
+        Map<String, Long> innerMap = new HashMap<>();
         List<String> words;
 
-        public AnalyzerThread(BlockingQueue<String> input, BlockingQueue<Map<String, Integer>> output) {
+        public AnalyzerThread(BlockingQueue<String> input) {
             this.input = input;
-            this.output = output;
         }
 
         @Override
-        public void run() {
+        public Map<String, Long> call() {
             try {
                 while (true) {
                     line = input.take();
@@ -127,14 +113,18 @@ public class TextAnalyzer {
                         break;
                     }
 
-                    words = readWords(line);
+                    words = Arrays.stream(line.toLowerCase().replaceAll("\\pP", " ").trim().split(" "))
+                            .filter(word -> !word.equals(""))
+                            .map(String::trim)
+                            .collect(Collectors.toList());
+
                     countWords(innerMap, words);
                 }
 
-                output.put(innerMap);
             } catch(InterruptedException e){
                 e.printStackTrace();
             }
+            return innerMap;
         }
     }
 }
