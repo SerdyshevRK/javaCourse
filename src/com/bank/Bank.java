@@ -1,85 +1,102 @@
 package com.bank;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
+import java.util.Map;
 
 public class Bank {
-
-    public TxResult transferMoney(Account src, Account dest, int amount) {
-        if (src.getBalance() < amount) {
-            return TxResult.NOT_ENOUGH;
-        }
-
-        if (amount < 1) {
-            return TxResult.NOT_VALID_AMOUNT;
-        }
-
-        src.changeBalance(amount, false); // take money
-        dest.changeBalance(amount, true); // add money
-
-        return TxResult.SUCCESS;
-    }
+    private Map<Integer, User> users = new HashMap<>();
 
     public static void main(String[] args) {
         Thread thread;
         Bank bank = new Bank();
         User user1 = new User("Tom");
         User user2 = new User("Jerry");
-        final Account account1 = new Account(50000, user1.getId());
-        final Account account2 = new Account(50000, user2.getId());
-        final Account account3 = new Account(50000, user1.getId());
-        final Account account4 = new Account(50000, user2.getId());
-
+        bank.users.put(user1.getId(), user1);
+        bank.users.put(user2.getId(), user2);
         List<Account> accounts = new ArrayList<>();
-        accounts.add(account1);
-        accounts.add(account2);
-        accounts.add(account3);
-        accounts.add(account4);
 
-        FutureTask<TxResult> task1 = new FutureTask<TxResult>(bank.new BankThread(account1, account2, 100));
-        FutureTask<TxResult> task2 = new FutureTask<TxResult>(bank.new BankThread(account2, account1, 1000));
-        FutureTask<TxResult> task3 = new FutureTask<TxResult>(bank.new BankThread(account2, account4, 1000));
-        FutureTask<TxResult> task4 = new FutureTask<TxResult>(bank.new BankThread(account4, account1, 1000));
-        FutureTask<TxResult> task5 = new FutureTask<TxResult>(bank.new BankThread(account3, account4, 1000));
-
-        List<FutureTask<TxResult>> tasks = new ArrayList<>();
-        tasks.add(task1);
-        tasks.add(task2);
-        tasks.add(task3);
-        tasks.add(task4);
-        tasks.add(task5);
-
-        for (FutureTask<TxResult> task : tasks) {
-            thread = new Thread(task);
-            thread.start();
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        for (User user : bank.users.values()) {
+            accounts.add(new Account(10000, user.getId()));
         }
 
         try {
-            System.out.println(task1.get());
-            System.out.println(task2.get());
-            System.out.println(task3.get());
-            System.out.println(task4.get());
-            System.out.println(task5.get());
+            thread = new Thread(bank.new BankThread(accounts.get(0), accounts.get(1), 100000));
+            thread.start();
+            thread.join();
+            thread = new Thread(bank.new BankThread(accounts.get(1), accounts.get(0), 1000));
+            thread.start();
+            thread.join();
+            thread = new Thread(bank.new BankThread(accounts.get(0), accounts.get(0), 1000));
+            thread.start();
+            thread.join();
+            thread = new Thread(bank.new BankThread(accounts.get(0), accounts.get(1), -1000));
+            thread.start();
+            thread.join();
+            thread = new Thread(bank.new BankThread(accounts.get(0), accounts.get(1), 2000));
+            thread.start();
+            thread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
             e.printStackTrace();
         }
 
         for (Account account : accounts) {
-            System.out.println(account.getAccountId() + " " + account.getBalance());
+            System.out.println(bank.users.get(account.getUserID()).getName() + ": " + account.getBalance());
         }
     }
 
-    class BankThread implements Callable {
+    private TxResult transferMoney(Account src, Account dest, int amount) throws InterruptedException {
+        TxResult result;
+        Thread thread;
+
+        if (src == dest) {
+            result = TxResult.NOT_VALID_DESTINATION;
+            thread = new Thread(new Mailer(src, dest, amount, result));
+            thread.start();
+            return result;
+        }
+
+        if (amount < 1) {
+            result = TxResult.NOT_VALID_AMOUNT;
+            thread = new Thread(new Mailer(src, dest, amount, result));
+            thread.start();
+            return result;
+        }
+
+        if (src.getBalance() < amount) {
+            result = TxResult.NOT_ENOUGH;
+            thread = new Thread(new Mailer(src, dest, amount, result));
+            thread.start();
+            return result;
+        }
+
+        if (src.getAccountId() < dest.getAccountId()) {
+            synchronized (src) {
+                synchronized (dest) {
+                    doTransfer(src, dest, amount);
+                }
+            }
+        } else {
+            synchronized (dest) {
+                synchronized (src) {
+                    doTransfer(src, dest, amount);
+                }
+            }
+        }
+
+        result = TxResult.SUCCESS;
+        thread = new Thread(new Mailer(src, dest, amount, result));
+        thread.start();
+        return result;
+    }
+
+    private void doTransfer(Account src, Account dest, int amount) {
+        src.changeBalance(amount, false); // take money
+        dest.changeBalance(amount, true); // add money
+    }
+
+    private class BankThread implements Runnable {
         Account src;
         Account dest;
         int amount;
@@ -91,11 +108,46 @@ public class Bank {
         }
 
         @Override
-        public TxResult call() {
-            synchronized (src) {
-                synchronized (dest) {
-                    return transferMoney(src, dest, amount);
-                }
+        public void run() {
+            try {
+                System.out.println(transferMoney(src, dest, amount));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class Mailer implements Runnable {  // забыл, кому и что он должен писать...
+        Account src;
+        Account dest;
+        int amount;
+        TxResult result;
+
+        public Mailer(Account src, Account dest, int amount, TxResult result) {
+            this.src = src;
+            this.dest = dest;
+            this.amount = amount;
+            this.result = result;
+        }
+
+        @Override
+        public void run() {
+            switch (result) {
+                case NOT_VALID_AMOUNT:
+                    System.out.println("Некорректная сумма для перевода.");
+                    break;
+                case NOT_ENOUGH:
+                    System.out.println("На счете " + users.get(src.getUserID()).getName() + " не хватает средств.");
+                    break;
+                case NOT_VALID_DESTINATION:
+                    System.out.println("Не удалось выполнить операцию, проверьте корректность введенных данных.");
+                    break;
+                case SUCCESS:
+                    System.out.println("Со счета " + users.get(src.getUserID()).getName()
+                            + " переведены средства в размере " + amount
+                            + " на счет " + users.get(dest.getUserID()).getName());
+                default:
+                    System.out.println("Паника! Что-то пошло не так!");
             }
         }
     }
