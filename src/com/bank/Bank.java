@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class Bank {
     private Map<Integer, User> users = new HashMap<>();
+    private BlockingQueue<String> messages = new ArrayBlockingQueue<>(5);
 
     public static void main(String[] args) {
         Thread thread;
@@ -20,6 +23,9 @@ public class Bank {
         for (User user : bank.users.values()) {
             accounts.add(new Account(10000, user.getId()));
         }
+
+        Mailer mailer = bank.new Mailer();
+        mailer.start();
 
         try {
             thread = new Thread(bank.new BankThread(accounts.get(0), accounts.get(1), 100000));
@@ -44,30 +50,31 @@ public class Bank {
         for (Account account : accounts) {
             System.out.println(bank.users.get(account.getUserID()).getName() + ": " + account.getBalance());
         }
+        mailer.interrupt();
     }
 
     private TxResult transferMoney(Account src, Account dest, int amount) throws InterruptedException {
         TxResult result;
-        Thread thread;
+        String msg;
 
         if (src == dest) {
             result = TxResult.NOT_VALID_DESTINATION;
-            thread = new Thread(new Mailer(src, dest, amount, result));
-            thread.start();
+            msg = src.getUserID() + ":Не удалось выполнить операцию, проверьте корректность данных.";
+            messages.put(msg);
             return result;
         }
 
         if (amount < 1) {
             result = TxResult.NOT_VALID_AMOUNT;
-            thread = new Thread(new Mailer(src, dest, amount, result));
-            thread.start();
+            msg = src.getUserID() + ":Некорректная сумма для перевода.";
+            messages.put(msg);
             return result;
         }
 
         if (src.getBalance() < amount) {
             result = TxResult.NOT_ENOUGH;
-            thread = new Thread(new Mailer(src, dest, amount, result));
-            thread.start();
+            msg = src.getUserID() + ":На вашем счете не хватает средств.";
+            messages.put(msg);
             return result;
         }
 
@@ -86,14 +93,22 @@ public class Bank {
         }
 
         result = TxResult.SUCCESS;
-        thread = new Thread(new Mailer(src, dest, amount, result));
-        thread.start();
+        msg = src.getUserID() + ":С вашего счета переведена сумма в размере "
+                + amount + " на счет пользователя " + users.get(dest.getUserID()).getName() + ".";
+        messages.put(msg);
+        msg = dest.getUserID() + ":На ваш счет поступили средства в размере "
+                + amount + " от пользователя " + users.get(src.getUserID()).getName() + ".";
+        messages.put(msg);
         return result;
     }
 
     private void doTransfer(Account src, Account dest, int amount) {
         src.changeBalance(amount, false); // take money
         dest.changeBalance(amount, true); // add money
+    }
+
+    private void sendMessage(int userID, String message) {
+        users.get(userID).printMessage(message);
     }
 
     private class BankThread implements Runnable {
@@ -117,37 +132,16 @@ public class Bank {
         }
     }
 
-    private class Mailer implements Runnable {  // забыл, кому и что он должен писать...
-        Account src;
-        Account dest;
-        int amount;
-        TxResult result;
-
-        public Mailer(Account src, Account dest, int amount, TxResult result) {
-            this.src = src;
-            this.dest = dest;
-            this.amount = amount;
-            this.result = result;
-        }
-
+    private class Mailer extends Thread {
         @Override
         public void run() {
-            switch (result) {
-                case NOT_VALID_AMOUNT:
-                    System.out.println("Некорректная сумма для перевода.");
-                    break;
-                case NOT_ENOUGH:
-                    System.out.println("На счете " + users.get(src.getUserID()).getName() + " не хватает средств.");
-                    break;
-                case NOT_VALID_DESTINATION:
-                    System.out.println("Не удалось выполнить операцию, проверьте корректность введенных данных.");
-                    break;
-                case SUCCESS:
-                    System.out.println("Со счета " + users.get(src.getUserID()).getName()
-                            + " переведены средства в размере " + amount
-                            + " на счет " + users.get(dest.getUserID()).getName());
-                default:
-                    System.out.println("Паника! Что-то пошло не так!");
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    String[] msg = messages.take().split(":");
+                    sendMessage(Integer.parseInt(msg[0]), msg[1]);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
     }

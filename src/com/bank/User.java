@@ -17,4 +17,8 @@ public class User {
     public String getName() {
         return name;
     }
+
+    public void printMessage(String message) {
+        System.out.println(name + ": " + message);
+    }
 }
