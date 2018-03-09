@@ -1,6 +1,7 @@
 package com.structures;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class Graph {
     private int maxSize = 50;
@@ -78,7 +79,7 @@ public class Graph {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<Integer, Object> entry : vertices.entrySet()) {
-            sb.append(entry.getValue().toString()).append("{");
+            sb.append(entry.getValue().toString()).append("{ ");
             for (int i = 0; i <= actualSize; i++) {
                 if (graphMatrix[entry.getKey()][i] < 0)
                     continue;
@@ -102,5 +103,28 @@ public class Graph {
             list.add(vertices.get(i));
         }
         return list;
+    }
+
+    public int search_BFS(Predicate predicate) {
+        Queue<Integer> verticesToOpen = new ArrayDeque<>();
+        Queue<Integer> verticesClosed = new ArrayDeque<>();
+        int index = -1;
+
+        verticesToOpen.add(0);
+        while (!verticesToOpen.isEmpty()) {
+            index = verticesToOpen.poll();
+            verticesClosed.add(index);
+            if (predicate.test(vertices.get(index))) {
+                break;
+            }
+            for (int i = 0; i < actualSize; i++) {
+                if (graphMatrix[index][i] < 0 || verticesClosed.contains(i) || verticesToOpen.contains(i))
+                    continue;
+
+                verticesToOpen.add(i);
+            }
+        }
+
+        return index;
     }
 }
