@@ -3,27 +3,27 @@ package com.structures;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class Graph {
+public class Graph<T> {
     private int maxSize = 50;
     private int actualSize;
-    private int[][] graphMatrix;
-    private Map<Integer, Object> vertices;
+    private double[][] graphMatrix;
+    private Map<Integer, T> vertices;
 
     public Graph() {
-        graphMatrix = new int[maxSize][maxSize];
+        graphMatrix = new double[maxSize][maxSize];
         initialMatrixFill(graphMatrix);
         vertices = new HashMap<>();
         actualSize = vertices.size();
     }
 
-    private void initialMatrixFill(int[][] matrix) {
-        for (int[] array : matrix) {
-            Arrays.fill(array, -1);
+    private void initialMatrixFill(double[][] matrix) {
+        for (double[] array : matrix) {
+            Arrays.fill(array, Double.NaN);
         }
     }
 
-    public void addVertex(int index, Object o) {
-        vertices.put(index, o);
+    public void addVertex(int index, T object) {
+        vertices.put(index, object);
         actualSize = vertices.size();
         resizeMatrix();
     }
@@ -35,7 +35,7 @@ public class Graph {
         actualSize = vertices.size();
     }
 
-    public void addEdge(int firstVertex, int secondVertex, int weight) {
+    public void addEdge(int firstVertex, int secondVertex, double weight) {
         graphMatrix[firstVertex][secondVertex] = weight;
         graphMatrix[secondVertex][firstVertex] = weight;
     }
@@ -44,7 +44,7 @@ public class Graph {
         addEdge(firstVertex, secondVertex, 1);
     }
 
-    public void addDirectionalEdge(int startVertex, int endVertex, int weight) {
+    public void addDirectionalEdge(int startVertex, int endVertex, double weight) {
         graphMatrix[startVertex][endVertex] = weight;
     }
 
@@ -53,7 +53,7 @@ public class Graph {
     }
 
     public void removeEdge(int firstVertex, int secondVertex) {
-        addEdge(firstVertex, secondVertex, -1);
+        addEdge(firstVertex, secondVertex, Double.NaN);
     }
 
     private void resizeMatrix() {
@@ -61,7 +61,7 @@ public class Graph {
             return;
 
         int newSize = maxSize * 2;
-        int[][] matrix = new int[newSize][newSize];
+        double[][] matrix = new double[newSize][newSize];
         initialMatrixFill(matrix);
 
         for (int i = 0; i < maxSize; i++) {
@@ -78,7 +78,7 @@ public class Graph {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Integer, Object> entry : vertices.entrySet()) {
+        for (Map.Entry<Integer, T> entry : vertices.entrySet()) {
             sb.append(entry.getValue().toString()).append("{ ");
             for (int i = 0; i <= actualSize; i++) {
                 if (graphMatrix[entry.getKey()][i] < 0)
@@ -90,14 +90,14 @@ public class Graph {
         return sb.toString();
     }
 
-    public Object getVertex(int index) {
+    public T getVertex(int index) {
         return vertices.get(index);
     }
 
-    public List<Object> getNeighbours(int index) {
-        List<Object> list = new ArrayList<>();
+    public List<T> getNeighbours(int index) {
+        List<T> list = new ArrayList<>();
         for (int i = 0; i <= actualSize; i++) {
-            if (graphMatrix[index][i] < 0)
+            if (Double.isNaN(graphMatrix[index][i]))
                 continue;
 
             list.add(vertices.get(i));
@@ -105,26 +105,46 @@ public class Graph {
         return list;
     }
 
-    public int search_BFS(Predicate predicate) {
+    public int search_BFS(Predicate<T> predicate) {
         Queue<Integer> verticesToOpen = new ArrayDeque<>();
-        Queue<Integer> verticesClosed = new ArrayDeque<>();
-        int index = -1;
+        List<Integer> visited = new ArrayList<>();
+        int index;
 
         verticesToOpen.add(0);
         while (!verticesToOpen.isEmpty()) {
             index = verticesToOpen.poll();
-            verticesClosed.add(index);
+            visited.add(index);
             if (predicate.test(vertices.get(index))) {
-                break;
+                return index;
             }
             for (int i = 0; i < actualSize; i++) {
-                if (graphMatrix[index][i] < 0 || verticesClosed.contains(i) || verticesToOpen.contains(i))
+                if (Double.isNaN(graphMatrix[index][i]) || visited.contains(i) || verticesToOpen.contains(i))
                     continue;
 
                 verticesToOpen.add(i);
             }
         }
 
-        return index;
+        return -1;
+    }
+
+    public int search_DFS(Predicate<T> predicate) {
+        List<Integer> visited = new ArrayList<>();
+        return search_DFS(0, visited, predicate);
+    }
+
+    private int search_DFS(int index, List<Integer> visited, Predicate<T> predicate) {
+        visited.add(index);
+        if (predicate.test(vertices.get(index))) {
+            return index;
+        }
+        int idx = -1;
+        for (int i = 0; i < actualSize; i++) {
+            if (Double.isNaN(graphMatrix[index][i]) || visited.contains(i))
+                continue;
+            idx = search_DFS(i, visited, predicate);
+            if (idx > 0) break;
+        }
+        return idx;
     }
 }
